@@ -5,7 +5,8 @@ import {
   Columns, Code2, Eye, Shield, Gauge, Check, Loader2, Save,
   Paperclip, PanelLeftClose, PanelLeftOpen, Send, Clock, Globe,
   ChevronRight, ChevronDown, PanelLeft, Menu, LogOut,
-  LayoutDashboard, Plus, FolderOpen, Settings as SettingsIcon, Bell
+  LayoutDashboard, Plus, FolderOpen, Settings as SettingsIcon, Bell,
+  Smartphone, Tablet, Laptop, Monitor
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import Avatar from '../components/ui/Avatar'
@@ -32,6 +33,13 @@ const VIEW_MODES = [
   { id: 'preview', icon: Eye, label: 'Preview Only' },
 ]
 
+const DEVICE_VIEWS = [
+  { id: 'mobile', icon: Smartphone, label: 'Mobile' },
+  { id: 'tablet', icon: Tablet, label: 'Tablet' },
+  { id: 'laptop', icon: Laptop, label: 'Laptop' },
+  { id: 'desktop', icon: Monitor, label: 'Desktop' },
+]
+
 export default function Builder() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -45,6 +53,7 @@ export default function Builder() {
   const [projectType, setProjectType] = useState('static') // 'static' | 'fullstack'
   
   const [viewMode, setViewMode] = useState('split')
+  const [device, setDevice] = useState('desktop')
   const [copied, setCopied] = useState(false)
   
   const [hasStarted, setHasStarted] = useState(false)
@@ -210,9 +219,15 @@ export default function Builder() {
         is_public: currentProject?.is_public || false
       });
       setCurrentProject(savedData);
-      toast.success('Saved ✓', { id: tid });
+      if (savedData) {
+        toast.success('Saved ✓', { id: tid });
+      } else {
+        toast.error('Could not save project. Is Supabase configured?', { id: tid });
+      }
+      return savedData;
     } catch (e) {
       toast.error('Failed to save', { id: tid });
+      return null;
     } finally {
       setIsSaving(false);
     }
@@ -234,15 +249,37 @@ export default function Builder() {
   }
 
   const handlePublishToggle = async () => {
-    if (!currentProject) return
-    if (currentProject.is_public) {
-      const data = await unpublishProject(currentProject.id)
-      setCurrentProject(data)
-      toast.success('Project unpublished')
-    } else {
-      const data = await publishProject(currentProject.id)
-      setCurrentProject(data)
-      toast.success('Project published')
+    let project = currentProject
+    
+    if (!project) {
+      if (!user) {
+        toast.error('Sign in to publish your project')
+        return
+      }
+      if (files.length === 0) {
+        toast.error('Nothing to publish yet')
+        return
+      }
+      
+      const tid = toast.loading('Saving project before publishing...')
+      project = await handleManualSave()
+      toast.dismiss(tid)
+      
+      if (!project) return // Save failed
+    }
+
+    try {
+      if (project.is_public) {
+        const data = await unpublishProject(project.id)
+        setCurrentProject(data)
+        toast.success('Project unpublished')
+      } else {
+        const data = await publishProject(project.id)
+        setCurrentProject(data)
+        toast.success('Project published')
+      }
+    } catch (err) {
+      toast.error('Failed to update publishing status')
     }
   }
 
@@ -492,6 +529,23 @@ export default function Builder() {
                       </button>
                     ))}
                   </div>
+
+                  {(viewMode === 'split' || viewMode === 'preview') && (
+                    <div className="flex items-center bg-bg-secondary rounded-lg p-1 border border-border shrink-0">
+                      {DEVICE_VIEWS.map(d => (
+                        <button
+                          key={d.id}
+                          onClick={() => setDevice(d.id)}
+                          className={`p-1.5 rounded-md transition-all ${
+                            device === d.id ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-primary'
+                          }`}
+                          title={d.label}
+                        >
+                          <d.icon size={14} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {files.length > 0 && (
@@ -567,7 +621,7 @@ export default function Builder() {
                     )}
                     {(viewMode === 'split' || viewMode === 'preview') && (
                       <ErrorBoundary>
-                        <PreviewPane code={getPrimaryHTML()} type={projectType} />
+                        <PreviewPane code={getPrimaryHTML()} type={projectType} device={device} />
                       </ErrorBoundary>
                     )}
                   </>

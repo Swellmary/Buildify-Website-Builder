@@ -1,7 +1,14 @@
 import { Eye, ExternalLink } from 'lucide-react'
 import Button from '../ui/Button'
 
-export default function PreviewPane({ code, type = 'static' }) {
+export default function PreviewPane({ code, type = 'static', device = 'desktop' }) {
+  const DEVICE_WIDTHS = {
+    mobile: '375px',
+    tablet: '768px',
+    laptop: '1024px',
+    desktop: '100%'
+  }
+
   if (!code) {
     return (
       <div className="flex-1 flex items-center justify-center bg-bg-secondary rounded-xl border border-border">
@@ -39,22 +46,37 @@ export default function PreviewPane({ code, type = 'static' }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white rounded-xl border border-border overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-bg-secondary">
-        <div className="flex gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-red-400" />
-          <span className="w-3 h-3 rounded-full bg-amber-400" />
-          <span className="w-3 h-3 rounded-full bg-emerald-400" />
+    <div className="flex-1 flex flex-col bg-bg-secondary rounded-xl border border-border overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-white shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+          </div>
+          <span className="text-[10px] text-text-light font-mono ml-2 uppercase tracking-wider">Preview — {device} view</span>
         </div>
-        <span className="text-xs text-text-light font-mono ml-2">preview — website.html</span>
+        <div className="text-[10px] font-medium text-text-muted bg-bg-secondary px-2 py-0.5 rounded border border-border">
+          {DEVICE_WIDTHS[device] === '100%' ? 'Adaptive' : DEVICE_WIDTHS[device]}
+        </div>
       </div>
-      <iframe
-        title="Website Preview"
-        srcDoc={code}
-        sandbox="allow-scripts allow-same-origin"
-        className="flex-1 w-full border-0 bg-white"
-        style={{ minHeight: '400px' }}
-      />
+      
+      <div className="flex-1 overflow-auto p-4 flex flex-col items-center bg-gray-50/50">
+        <div 
+          className="bg-white shadow-2xl rounded-lg overflow-hidden border border-border transition-all duration-500 ease-in-out flex-1 w-full"
+          style={{ 
+            maxWidth: DEVICE_WIDTHS[device],
+            minHeight: '100%'
+          }}
+        >
+          <iframe
+            title="Website Preview"
+            srcDoc={code}
+            sandbox="allow-scripts allow-same-origin"
+            className="w-full h-full border-0"
+          />
+        </div>
+      </div>
     </div>
   )
 }
