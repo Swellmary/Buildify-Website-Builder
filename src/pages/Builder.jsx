@@ -45,7 +45,7 @@ export default function Builder() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { saveProject, publishProject, unpublishProject } = useProjects()
-  const { files, setFiles, messages, isGenerating, error, generate, dailyCount, dailyLimit, setError } = useGemini()
+  const { files, setFiles, messages, setMessages, isGenerating, error, generate, dailyCount, dailyLimit, setError } = useGemini()
 
   const [prompt, setPrompt] = useState('')
   const [style, setStyle] = useState('minimal')
@@ -106,6 +106,17 @@ export default function Builder() {
       setStyle(s.project.style || 'minimal')
       setCategory(s.project.category || '')
       setProjectType(s.project.type || 'static')
+      
+      if (s.project.messages) {
+        try {
+          const m = typeof s.project.messages === 'string' 
+            ? JSON.parse(s.project.messages) 
+            : s.project.messages
+          setMessages(m)
+        } catch (e) {
+          console.error("Failed to parse messages", e)
+        }
+      }
       
       try {
         const parsedFiles = JSON.parse(s.project.html_content)
@@ -183,6 +194,7 @@ export default function Builder() {
             style,
             category,
             type: projectType,
+            messages: JSON.stringify(history),
             html_content: JSON.stringify(result.files),
             is_public: currentProject?.is_public || false
           })
@@ -215,6 +227,7 @@ export default function Builder() {
         style,
         category,
         type: projectType,
+        messages: JSON.stringify(messages),
         html_content: JSON.stringify(files),
         is_public: currentProject?.is_public || false
       });
@@ -462,7 +475,7 @@ export default function Builder() {
                 <div className="text-center text-sm text-text-muted py-8">Chat history is empty</div>
               )}
               {messages.map((msg, idx) => (
-                <ChatBubble key={idx} role={msg.role} content={msg.content} />
+                <ChatBubble key={idx} role={msg.role} content={msg.content} timestamp={msg.timestamp} />
               ))}
               {isGenerating && (
                 <div className="flex items-center gap-3 mb-6">

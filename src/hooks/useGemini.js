@@ -26,7 +26,11 @@ export function useGemini() {
     setError(null)
 
     // Add user message to history
-    const history = [...messages, { role: 'user', content: userPrompt }]
+    const history = [...messages, { 
+      role: 'user', 
+      content: userPrompt,
+      timestamp: new Date().toISOString() 
+    }]
     setMessages(history)
 
     try {
@@ -34,7 +38,11 @@ export function useGemini() {
       
       // Update state with result
       setFiles(response.files || [])
-      setMessages([...history, { role: 'ai', content: response.message }])
+      setMessages([...history, { 
+        role: 'ai', 
+        content: response.message,
+        timestamp: new Date().toISOString()
+      }])
       
       const count = incrementDailyCount()
       setDailyCount(count)

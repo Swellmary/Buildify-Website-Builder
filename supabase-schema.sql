@@ -9,6 +9,7 @@ create table if not exists projects (
   user_id uuid references auth.users(id) on delete cascade,
   name text not null,
   prompt text not null,
+  messages text,
   style text not null,
   category text,
   html_content text not null,
@@ -24,6 +25,7 @@ create table if not exists projects (
 alter table projects 
   add column if not exists type text default 'static',
   add column if not exists slug text unique,
+  add column if not exists messages text,
   add column if not exists is_starred boolean default false;
 
 -- Enable RLS

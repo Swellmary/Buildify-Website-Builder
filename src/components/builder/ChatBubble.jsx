@@ -7,6 +7,15 @@ export default function ChatBubble({ role, content, timestamp }) {
   const { profile } = useAuth()
   const isAI = role === 'ai'
 
+  const formattedTime = (ts) => {
+    if (!ts) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    try {
+      return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    } catch {
+      return ts
+    }
+  }
+
   return (
     <div className={`flex gap-3 mb-6 ${isAI ? '' : 'flex-row-reverse'}`}>
       <div className="shrink-0">
@@ -24,7 +33,7 @@ export default function ChatBubble({ role, content, timestamp }) {
           <span className="text-xs font-semibold text-primary">
             {isAI ? 'Buildify AI' : profile?.name || 'You'}
           </span>
-          <span className="text-[10px] text-text-light">{timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="text-[10px] text-text-light">{formattedTime(timestamp)}</span>
         </div>
         <div
           className={`px-4 py-2.5 rounded-2xl text-sm ${
